@@ -154,31 +154,37 @@ function success(pos) {
   const time = pos.timestamp;
 
   // Speed in m/s, convert to km/h
-  const speed = pos.coords.speed !== null ? pos.coords.speed * 3.6 : null; // m/s to km/h
+  const speed = pos.coords.speed !== null ? pos.coords.speed * 3.6 : null; // m/s → km/h
 
   // Decide interval based on speed
-  let interval = 1 * 1000; // Default 3 seconds
+  let interval = 3000; // default 3s
+
   if (speed !== null) {
     if (speed >= 80) {
-      interval = 8 * 1000;
+      interval = 8000;
     } else if (speed >= 30) {
-      interval = 3 * 1000;
-    } else if (speed >= 3) {
-      interval = 2 * 1000;
+      interval = 3000;
+    } else if (speed >= 2) {
+      interval = 2000;
+    } else {
+      // If moving slower than 3 km/h, treat as stationary
+      interval = 60000; // 60 seconds
     }
-    // else: below 3km/h, keep 3s
+  } else {
+    // No speed info, treat as stationary
+    interval = 60000; // 60 seconds
   }
 
   // Record only if enough time has passed
-  if (
-    !lastRecordTime || 
-    (time - lastRecordTime) >= interval
-  ) {
-    gpxPoints.push({lat, lon, time});
+  if (!lastRecordTime || (time - lastRecordTime) >= interval) {
+    gpxPoints.push({ lat, lon, time });
     lastRecordTime = time;
   }
 
-  x.innerHTML = `Last point: ${lat}, ${lon}<br>Accuracy: ±${acc}m<br>Speed: ${speed !== null ? speed.toFixed(1) : 'N/A'} km/h<br>Points recorded: ${gpxPoints.length}`;
+  x.innerHTML = `Last point: ${lat}, ${lon}<br>
+    Accuracy: ±${acc}m<br>
+    Speed: ${speed !== null ? speed.toFixed(1) : 'N/A'} km/h<br>
+    Points recorded: ${gpxPoints.length}`;
 }
 
 // Error callback
